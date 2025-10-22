@@ -6,13 +6,11 @@ import { config } from 'dotenv';
 // Load environment variables from .env file
 config();
 
-import { ChatOpenAI } from '@langchain/openai';
 import { createReactAgent } from '@langchain/langgraph/prebuilt';
-
-
 import { JamespotUserApi, Network } from 'jamespot-user-api';
 import { WindowNode } from './utils/WindowNode';
 import { createJamespotTools } from './tools/tools';
+import { createLLM, getLLMConfigFromEnv, displayLLMConfig } from './llm/llm-factory';
 import * as readline from 'readline';
 
 
@@ -62,11 +60,10 @@ async function main() {
 
         // Create LLM
         console.log('Creating LLM...');
-        const llm = new ChatOpenAI({
-            modelName: 'gpt-4',
-            temperature: 0,
-            openAIApiKey: process.env.OPENAI_API_KEY
-        });
+        const llmConfig = getLLMConfigFromEnv();
+        displayLLMConfig(llmConfig);
+
+        const llm = createLLM(llmConfig);
 
         // Create agent
         console.log('Creating agent...');

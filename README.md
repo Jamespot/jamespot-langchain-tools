@@ -44,7 +44,33 @@ cp .env.example .env
 | `JAMESPOT_URL` | Your Jamespot instance URL (e.g., `https://your-instance.jamespot.com`) |
 | `JAMESPOT_EMAIL` | Email address for Jamespot authentication |
 | `JAMESPOT_PASSWORD` | Password for Jamespot authentication |
-| `OPENAI_API_KEY` | OpenAI API key for LangChain agent (starts with `sk-`) |
+| `OPENAI_API_KEY` or `SAFEBRAIN_API_KEY` | API key for your chosen LLM provider |
+
+#### LLM Provider Configuration
+
+| Variable | Description |
+|----------|-------------|
+| `LLM_PROVIDER` | Choose your LLM provider: `openai` or `safebrain` (default: `openai`) |
+| `LLM_MODEL` | Model name (e.g., `gpt-4`, `gpt-4-turbo`) - optional, uses provider defaults |
+| `LLM_TEMPERATURE` | Temperature for LLM (0.0 to 1.0) - default: 0 |
+| `LLM_MAX_TOKENS` | Maximum tokens for LLM response - optional |
+
+#### OpenAI Configuration (when LLM_PROVIDER=openai)
+
+| Variable | Description |
+|----------|-------------|
+| `OPENAI_API_KEY` | OpenAI API key (starts with `sk-`) |
+
+#### Safebrain Configuration (when LLM_PROVIDER=safebrain)
+
+| Variable | Description |
+|----------|-------------|
+| `SAFEBRAIN_API_KEY` | Safebrain API key in format `sk_live_...` (required) |
+| `SAFEBRAIN_INSTANCE` | Your Safebrain instance domain, e.g., `your-company.safebrain.ai` (required) |
+| `SAFEBRAIN_BOT_ID` | The bot ID to use for chat completions (required) |
+| `SAFEBRAIN_GROUP_ID` | The group ID where the bot is configured (required) |
+| `SAFEBRAIN_MODEL` | Model name (optional, defaults to `gpt-4o`). Available: `gpt-4o`, `gpt-4`, `gpt-4-turbo`, `claude-3-5-sonnet` |
+| `SAFEBRAIN_BASE_URL` | Custom base URL (optional, auto-constructed from instance/bot/group if not provided) |
 
 #### Optional Variables
 
@@ -52,6 +78,7 @@ cp .env.example .env
 |----------|-------------|
 | `UNSPLASH_ACCESS_KEY` | Unsplash API access key for image search tools (optional, only needed if using image tools) |
 | `SYSTEM_PROMPT` | Custom system prompt for the AI agent |
+| `DEBUG` | Enable debug mode (`true` or `false`) |
 
 #### Getting an Unsplash Access Key
 
@@ -63,23 +90,54 @@ To use the Unsplash image search tools:
 
 **Note:** The free tier provides 50 requests per hour. For production use, you can apply for a higher rate limit (5,000 requests/hour).
 
-#### Example .env File
+#### Example .env Files
 
+**Using OpenAI:**
 ```bash
-# OpenAI API Key for LangChain agent
+# LLM Provider Configuration
+LLM_PROVIDER=openai
 OPENAI_API_KEY=sk-your-openai-api-key-here
-
-# Unsplash API Configuration (for image search tools)
-UNSPLASH_ACCESS_KEY=your-unsplash-access-key-here
 
 # Jamespot Configuration
 JAMESPOT_URL=https://your-jamespot-instance.com
 JAMESPOT_EMAIL=your-email@example.com
 JAMESPOT_PASSWORD=your-password
 
+# Optional: Unsplash API Configuration (for image search tools)
+UNSPLASH_ACCESS_KEY=your-unsplash-access-key-here
+
 # Optional: Custom system prompt
-SYSTEM_PROMPT=Description de l'agent
+SYSTEM_PROMPT=You are a helpful assistant for the Jamespot platform.
 ```
+
+**Using Safebrain:**
+```bash
+# LLM Provider Configuration
+LLM_PROVIDER=safebrain
+SAFEBRAIN_API_KEY=sk_live_your-safebrain-api-key-here
+SAFEBRAIN_INSTANCE=your-company.safebrain.ai
+SAFEBRAIN_BOT_ID=123
+SAFEBRAIN_GROUP_ID=456
+# Optional: SAFEBRAIN_MODEL=gpt-4o
+
+# Jamespot Configuration
+JAMESPOT_URL=https://your-jamespot-instance.com
+JAMESPOT_EMAIL=your-email@example.com
+JAMESPOT_PASSWORD=your-password
+
+# Optional: Unsplash API Configuration (for image search tools)
+UNSPLASH_ACCESS_KEY=your-unsplash-access-key-here
+
+# Optional: Custom system prompt
+SYSTEM_PROMPT=You are a helpful assistant for the Jamespot platform.
+```
+
+**Getting Safebrain Credentials:**
+
+1. **API Key**: Go to [https://app.safebrain.ai](https://app.safebrain.ai) → Settings → API Keys
+2. **Instance**: Your Safebrain instance domain (e.g., `your-company.safebrain.ai`)
+3. **Bot ID**: Navigate to the Bots section and copy the bot ID
+4. **Group ID**: Navigate to the Groups section and copy the group ID where your bot is configured
 
 ## Quick Start
 

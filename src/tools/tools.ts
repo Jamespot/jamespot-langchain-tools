@@ -7,6 +7,9 @@ import { createApplicationTools } from './application-tools';
 import { createImageSearchTools } from './image-search-tools';
 import { createFileTools } from './file-tools';
 import { createNetworkTools } from './network-tools';
+import { createSocialEventTools } from './socialEvent-tools';
+import { createMeetingTools } from './meeting-tools';
+import { createUtilityTools } from './utility-tools';
 import { jUserList } from 'jamespot-user-api';
 
 export { BaseJamespotTool, JamespotToolConfig } from './base-tool';
@@ -18,6 +21,9 @@ export * from './application-tools';
 export * from './image-search-tools';
 export * from './file-tools';
 export * from './network-tools';
+export * from './socialEvent-tools';
+export * from './meeting-tools';
+export * from './utility-tools';
 
 export async function createJamespotTools(
   toolConfig: JamespotToolConfig
@@ -38,6 +44,7 @@ export async function createJamespotTools(
 
   // Collect all tools
   const tools: any[] = [];
+  tools.push(...createUtilityTools(toolConfig, currentUser));
   tools.push(...createUserTools(toolConfig, currentUser));
   tools.push(...createGroupTools(toolConfig, currentUser));
   tools.push(...createContentTools(toolConfig, currentUser));
@@ -46,6 +53,8 @@ export async function createJamespotTools(
   tools.push(...createImageSearchTools(toolConfig, currentUser));
   tools.push(...createFileTools(toolConfig, currentUser));
   tools.push(...createNetworkTools(toolConfig, currentUser));
+  tools.push(...createSocialEventTools(toolConfig, currentUser));
+  tools.push(...createMeetingTools(toolConfig, currentUser));
 
   return tools;
 }
