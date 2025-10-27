@@ -30,6 +30,7 @@
     "dotenv": "^17.2.3",
     "jamespot-user-api": "^1.2.58",
     "node-fetch": "^3.3.2",
+    "prebuilt": "link:@langchain/langgraph/prebuilt",
     "unsplash-js": "^7.0.20",
     "zod": "^3.25.76"
   },
