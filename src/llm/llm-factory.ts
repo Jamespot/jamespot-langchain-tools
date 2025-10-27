@@ -1,4 +1,5 @@
 import { ChatOpenAI } from '@langchain/openai';
+import { ChatMistralAI } from '@langchain/mistralai';
 
 /**
  * Supported LLM providers
@@ -6,6 +7,7 @@ import { ChatOpenAI } from '@langchain/openai';
 export enum LLMProvider {
   OPENAI = 'openai',
   SAFEBRAIN = 'safebrain',
+  MISTRAL = 'mistral',
 }
 
 /**
@@ -26,7 +28,7 @@ export interface LLMConfig {
 /**
  * Factory function to create LLM instances based on provider
  */
-export function createLLM(config: LLMConfig): ChatOpenAI {
+export function createLLM(config: LLMConfig): ChatOpenAI | ChatMistralAI {
   const {
     provider,
     modelName,
@@ -92,6 +94,25 @@ export function createLLM(config: LLMConfig): ChatOpenAI {
         timeout: 60000,
       });
 
+    case LLMProvider.MISTRAL:
+      // Mistral AI API
+      const mistralApiKey = apiKey || process.env.MISTRAL_API_KEY;
+      const mistralModel = modelName || process.env.MISTRAL_MODEL || 'mistral-large-latest';
+
+      if (!mistralApiKey) {
+        throw new Error(
+          'Mistral API key is required. Set MISTRAL_API_KEY environment variable or pass apiKey in config.'
+        );
+      }
+
+      return new ChatMistralAI({
+        model: mistralModel,
+        temperature,
+        apiKey: mistralApiKey,
+        maxTokens,
+        maxRetries: 3,
+      });
+
     default:
       throw new Error(`Unsupported LLM provider: ${provider}`);
   }
@@ -107,16 +128,28 @@ export function getLLMConfigFromEnv(): LLMConfig {
   let provider: LLMProvider;
   if (providerStr === 'safebrain') {
     provider = LLMProvider.SAFEBRAIN;
+  } else if (providerStr === 'mistral') {
+    provider = LLMProvider.MISTRAL;
   } else {
     // Default to OpenAI for backward compatibility
     provider = LLMProvider.OPENAI;
+  }
+
+  // Get API key based on provider
+  let apiKey: string | undefined;
+  if (provider === LLMProvider.SAFEBRAIN) {
+    apiKey = process.env.SAFEBRAIN_API_KEY;
+  } else if (provider === LLMProvider.MISTRAL) {
+    apiKey = process.env.MISTRAL_API_KEY;
+  } else {
+    apiKey = process.env.OPENAI_API_KEY;
   }
 
   return {
     provider,
     modelName: process.env.LLM_MODEL,
     temperature: process.env.LLM_TEMPERATURE ? parseFloat(process.env.LLM_TEMPERATURE) : 0,
-    apiKey: provider === LLMProvider.SAFEBRAIN ? process.env.SAFEBRAIN_API_KEY : process.env.OPENAI_API_KEY,
+    apiKey,
     baseURL: process.env.SAFEBRAIN_BASE_URL,
     maxTokens: process.env.LLM_MAX_TOKENS ? parseInt(process.env.LLM_MAX_TOKENS) : undefined,
     safebrainBotId: process.env.SAFEBRAIN_BOT_ID,

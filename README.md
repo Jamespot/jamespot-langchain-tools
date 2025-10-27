@@ -4,18 +4,23 @@ LangChain tools for integrating Jamespot API with AI agents. This package provid
 
 ## Features
 
-- 🤖 **45 LangChain tools** for Jamespot API operations and external services
+- 🤖 **60 LangChain tools** for Jamespot API operations and external services
+- 🛠️ **Utility tools**: Get connection context, manage dates and times for scheduling
 - 👥 **User management**: Get, search, and update user profiles
 - 👫 **Group operations**: List, search groups and manage members
 - 📝 **Content management**: Create, search articles and add comments
+- 📅 **Social events**: Create, update, manage social events with full calendar integration
+- 🤝 **Meetings**: Create meetings with agenda and reports, manage participants
 - 💬 **Messenger**: Send messages and manage discussions
 - 📱 **Application management**: Install, configure, and manage Jamespot applications
 - 🖼️ **Unsplash images**: Search and find high-quality, free-to-use professional images
 - 📁 **File & folder management**: Upload, organize, search files and navigate file banks
 - 🔌 **Network utilities**: Token management for file uploads and article attachments
+- 🤖 **Multiple LLM providers**: Support for OpenAI, Safebrain, and Mistral AI
 - 🔐 **Automatic authentication**: Handle token management transparently
 - 📦 **TypeScript support**: Full type safety with TypeScript
 - 🎯 **Flexible configuration**: Choose which tools to include
+- 🇫🇷 **French documentation**: Complete guide available in French (GUIDE-FR.md)
 
 ## Installation
 
@@ -44,13 +49,13 @@ cp .env.example .env
 | `JAMESPOT_URL` | Your Jamespot instance URL (e.g., `https://your-instance.jamespot.com`) |
 | `JAMESPOT_EMAIL` | Email address for Jamespot authentication |
 | `JAMESPOT_PASSWORD` | Password for Jamespot authentication |
-| `OPENAI_API_KEY` or `SAFEBRAIN_API_KEY` | API key for your chosen LLM provider |
+| `OPENAI_API_KEY`, `SAFEBRAIN_API_KEY`, or `MISTRAL_API_KEY` | API key for your chosen LLM provider |
 
 #### LLM Provider Configuration
 
 | Variable | Description |
 |----------|-------------|
-| `LLM_PROVIDER` | Choose your LLM provider: `openai` or `safebrain` (default: `openai`) |
+| `LLM_PROVIDER` | Choose your LLM provider: `openai`, `safebrain`, or `mistral` (default: `openai`) |
 | `LLM_MODEL` | Model name (e.g., `gpt-4`, `gpt-4-turbo`) - optional, uses provider defaults |
 | `LLM_TEMPERATURE` | Temperature for LLM (0.0 to 1.0) - default: 0 |
 | `LLM_MAX_TOKENS` | Maximum tokens for LLM response - optional |
@@ -71,6 +76,13 @@ cp .env.example .env
 | `SAFEBRAIN_GROUP_ID` | The group ID where the bot is configured (required) |
 | `SAFEBRAIN_MODEL` | Model name (optional, defaults to `gpt-4o`). Available: `gpt-4o`, `gpt-4`, `gpt-4-turbo`, `claude-3-5-sonnet` |
 | `SAFEBRAIN_BASE_URL` | Custom base URL (optional, auto-constructed from instance/bot/group if not provided) |
+
+#### Mistral AI Configuration (when LLM_PROVIDER=mistral)
+
+| Variable | Description |
+|----------|-------------|
+| `MISTRAL_API_KEY` | Mistral API key (required) - Get it from [https://console.mistral.ai/api-keys](https://console.mistral.ai/api-keys) |
+| `MISTRAL_MODEL` | Model name (optional, defaults to `mistral-large-latest`). Available models: `mistral-large-latest`, `mistral-medium-latest`, `mistral-small-latest`, `codestral-latest`, `open-mistral-7b`, `open-mixtral-8x7b`, `open-mixtral-8x22b` |
 
 #### Optional Variables
 
@@ -132,6 +144,34 @@ UNSPLASH_ACCESS_KEY=your-unsplash-access-key-here
 SYSTEM_PROMPT=You are a helpful assistant for the Jamespot platform.
 ```
 
+**Using Mistral AI:**
+```bash
+# LLM Provider Configuration
+LLM_PROVIDER=mistral
+MISTRAL_API_KEY=your-mistral-api-key-here
+# Optional: MISTRAL_MODEL=mistral-large-latest
+
+# Jamespot Configuration
+JAMESPOT_URL=https://your-jamespot-instance.com
+JAMESPOT_EMAIL=your-email@example.com
+JAMESPOT_PASSWORD=your-password
+
+# Optional: Unsplash API Configuration (for image search tools)
+UNSPLASH_ACCESS_KEY=your-unsplash-access-key-here
+
+# Optional: Custom system prompt
+SYSTEM_PROMPT=You are a helpful assistant for the Jamespot platform.
+```
+
+**Getting Mistral Credentials:**
+
+1. **API Key**: Go to [https://console.mistral.ai/api-keys](https://console.mistral.ai/api-keys) and create a new API key
+2. **Model Selection**: Choose from various models based on your needs:
+   - `mistral-large-latest`: Most capable model for complex tasks
+   - `mistral-medium-latest`: Balanced performance and cost
+   - `mistral-small-latest`: Fast and cost-effective
+   - `codestral-latest`: Specialized for code generation
+
 **Getting Safebrain Credentials:**
 
 1. **API Key**: Go to [https://app.safebrain.ai](https://app.safebrain.ai) → Settings → API Keys
@@ -171,6 +211,14 @@ const result = await agent.invoke({
 
 ## Available Tools
 
+### Utility Tools (3 tools)
+
+| Tool Name | Description |
+|-----------|-------------|
+| `jamespot_get_connection_context` | Get backend URL and current user info |
+| `jamespot_get_current_datetime` | Get current date/time in Jamespot formats |
+| `jamespot_calculate_date` | Calculate dates by adding/subtracting days, hours, minutes |
+
 ### User Tools (4 tools)
 
 | Tool Name | Description |
@@ -203,6 +251,28 @@ const result = await agent.invoke({
 | `jamespot_get_article` | Get article by ID |
 | `jamespot_search_articles` | Search articles |
 | `jamespot_comment_article` | Add comment to article |
+
+### Social Event Tools (6 tools)
+
+| Tool Name | Description |
+|-----------|-------------|
+| `jamespot_create_social_event` | Create new social event with dates, location, attendees |
+| `jamespot_update_social_event` | Update existing social event |
+| `jamespot_get_social_event` | Get social event details by ID |
+| `jamespot_search_social_events` | Search social events by keywords |
+| `jamespot_list_social_events` | List social events with filters |
+| `jamespot_delete_social_event` | Delete a social event |
+
+### Meeting Tools (6 tools)
+
+| Tool Name | Description |
+|-----------|-------------|
+| `jamespot_create_meeting` | Create meeting with agenda and reports |
+| `jamespot_update_meeting` | Update existing meeting |
+| `jamespot_get_meeting` | Get meeting details including agenda |
+| `jamespot_search_meetings` | Search meetings by keywords |
+| `jamespot_list_meetings` | List meetings with filters |
+| `jamespot_delete_meeting` | Delete a meeting |
 
 ### Messenger Tools (6 tools)
 
@@ -427,12 +497,17 @@ pnpm test
 ```
 src/
 ├── chat.ts                    # Interactive chat interface
+├── llm/
+│   └── llm-factory.ts        # LLM provider factory (OpenAI/Safebrain)
 ├── tools/
 │   ├── base-tool.ts          # Base class for all tools
 │   ├── tools.ts              # Main tool factory
+│   ├── utility-tools.ts      # Utility tools (3)
 │   ├── user-tools.ts         # User-related tools (4)
 │   ├── group-tools.ts        # Group-related tools (10)
 │   ├── content-tools.ts      # Content-related tools (4)
+│   ├── socialEvent-tools.ts  # Social event tools (6)
+│   ├── meeting-tools.ts      # Meeting tools (6)
 │   ├── messenger-tools.ts    # Messenger tools (6)
 │   ├── application-tools.ts  # Application tools (4)
 │   ├── image-search-tools.ts # Image search tools (3)

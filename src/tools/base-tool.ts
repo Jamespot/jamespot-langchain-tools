@@ -53,6 +53,17 @@ export abstract class BaseJamespotTool {
   }
 
   /**
+   * Log tool usage
+   */
+  protected logToolUsage(toolName: string, params?: any): void {
+    const timestamp = new Date().toISOString();
+    console.log(`\n🔧 [${timestamp}] Tool used: ${toolName}`);
+    if (params && Object.keys(params).length > 0) {
+      console.log(`   Parameters: ${JSON.stringify(params)}`);
+    }
+  }
+
+  /**
    * Log API response in debug mode
    */
   protected logApiResponse(toolName: string, result: any): void {

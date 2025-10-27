@@ -14,6 +14,9 @@ importers:
       '@langchain/langgraph':
         specifier: ^0.4.9
         version: 0.4.9(@langchain/core@0.3.78(openai@5.12.2(zod@3.25.76)))(zod-to-json-schema@3.24.6(zod@3.25.76))
+      '@langchain/mistralai':
+        specifier: ^1.0.0
+        version: 1.0.0(@langchain/core@0.3.78(openai@5.12.2(zod@3.25.76)))
       '@langchain/openai':
         specifier: ^0.6.14
         version: 0.6.14(@langchain/core@0.3.78(openai@5.12.2(zod@3.25.76)))
@@ -122,11 +125,20 @@ packages:
       zod-to-json-schema:
         optional: true
 
+  '@langchain/mistralai@1.0.0':
+    resolution: {integrity: sha512-gzRjDjGGgd5RApF3pSO1t15nJmnbmutT/XcNfyemmJjL5LhD7+Z0PeMqDshmGdMh/holBo6b7su8aCLGon+X8g==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': ^1.0.0
+
   '@langchain/openai@0.6.14':
     resolution: {integrity: sha512-SM/xJOFDxT9NN/07fvhNB5dgAsIOQaLhmANxrRlSQ7Qs1zImMrzOvq+/5JP/ifpC/YxcgEnt4dblKVqvNU/C5A==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': '>=0.3.68 <0.4.0'
+
+  '@mistralai/mistralai@1.10.0':
+    resolution: {integrity: sha512-tdIgWs4Le8vpvPiUEWne6tK0qbVc+jMenujnvTqOjogrJUsCSQhus0tHTU1avDDh5//Rq2dFgP9mWRAdIEoBqg==}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -857,6 +869,12 @@ snapshots:
       - react
       - react-dom
 
+  '@langchain/mistralai@1.0.0(@langchain/core@0.3.78(openai@5.12.2(zod@3.25.76)))':
+    dependencies:
+      '@langchain/core': 0.3.78(openai@5.12.2(zod@3.25.76))
+      '@mistralai/mistralai': 1.10.0
+      uuid: 10.0.0
+
   '@langchain/openai@0.6.14(@langchain/core@0.3.78(openai@5.12.2(zod@3.25.76)))':
     dependencies:
       '@langchain/core': 0.3.78(openai@5.12.2(zod@3.25.76))
@@ -865,6 +883,11 @@ snapshots:
       zod: 3.25.76
     transitivePeerDependencies:
       - ws
+
+  '@mistralai/mistralai@1.10.0':
+    dependencies:
+      zod: 3.25.76
+      zod-to-json-schema: 3.24.6(zod@3.25.76)
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:

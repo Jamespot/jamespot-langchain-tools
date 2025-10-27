@@ -17,6 +17,8 @@ export class GetCurrentDateTimeTool extends BaseJamespotTool {
       }),
       func: async function({ timezone }: any) {
         try {
+          self.logToolUsage('jamespot_get_current_datetime', { timezone });
+
           const now = new Date();
 
           // Apply timezone if provided
@@ -105,6 +107,8 @@ export class CalculateDateTool extends BaseJamespotTool {
       }),
       func: async function({ baseDate, days = 0, hours = 0, minutes = 0, timezone }: any) {
         try {
+          self.logToolUsage('jamespot_calculate_date', { baseDate, days, hours, minutes, timezone });
+
           // Parse base date or use current date
           let date: Date;
           if (baseDate) {
@@ -170,8 +174,52 @@ export class CalculateDateTool extends BaseJamespotTool {
   }
 }
 
+export class GetConnectionContextTool extends BaseJamespotTool {
+  createTool() {
+    const self = this;
+    return new DynamicStructuredTool({
+      name: 'jamespot_get_connection_context',
+      description:
+        'Tool used to transformed example a relative url in a absolute url. ' +
+        'This is mandatory for constructing all full URLs because we always want absolute URLs in user answers.',
+      schema: z.object({}),
+      func: async function() {
+        try {
+          self.logToolUsage('jamespot_get_connection_context');
+
+          const response = {
+            connection: {
+              backendUrl: self.backendUrl,
+              instanceName: self.backendUrl ? new URL(self.backendUrl).hostname : 'unknown',
+            },
+            currentUser: {
+              id: self.currentUser.id,
+              uri: self.currentUser.uri,
+              firstname: self.currentUser.firstname,
+              lastname: self.currentUser.lastname,
+              email: self.currentUser.email,
+              fullName: `${self.currentUser.firstname} ${self.currentUser.lastname}`,
+            },
+            urlConstruction: {
+              example: 'To create a full URL, combine backendUrl with the path',
+              articleExample: `${self.backendUrl}/article/123`,
+              groupExample: `${self.backendUrl}/spot/456`,
+            },
+          };
+
+          self.logApiResponse('jamespot_get_connection_context', response);
+          return JSON.stringify(response, null, 2);
+        } catch (error: any) {
+          return `Error: ${self.formatError(error)}`;
+        }
+      },
+    } as any);
+  }
+}
+
 export function createUtilityTools(config: JamespotToolConfig, currentUser: jUserList): any[] {
   return [
+    new GetConnectionContextTool(config, currentUser).createTool(),
     new GetCurrentDateTimeTool(config, currentUser).createTool(),
     new CalculateDateTool(config, currentUser).createTool(),
   ];
