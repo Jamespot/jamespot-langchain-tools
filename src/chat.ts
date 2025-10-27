@@ -69,9 +69,7 @@ async function main() {
         console.log('Creating agent...');
         const agent = createReactAgent({
             llm,
-            tools,
-            messageModifier: `You are a helpful assistant for the Jamespot platform.
-Be concise and efficient. If you can't complete a task after 3 attempts, explain why and ask for clarification.`
+            tools
         });
 
         console.log('✓ Agent ready!\n');
