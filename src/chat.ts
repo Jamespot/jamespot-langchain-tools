@@ -159,9 +159,14 @@ async function main() {
                         console.log('');
                     }
 
-                    const result = await agent.invoke({
-                        messages: conversationHistory
-                    });
+                    const result = await agent.invoke(
+                        {
+                            messages: conversationHistory
+                        },
+                        {
+                            recursionLimit: 15  // Limite à 15 appels LLM max par question
+                        }
+                    );
 
                     if (debugEnabled) {
                         console.log('\n📥 Raw agent result:');

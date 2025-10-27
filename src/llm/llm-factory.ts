@@ -43,6 +43,8 @@ export function createLLM(config: LLMConfig): ChatOpenAI {
         temperature,
         openAIApiKey: apiKey || process.env.OPENAI_API_KEY,
         maxTokens,
+        maxRetries: 3,
+        timeout: 60000,
       });
 
     case LLMProvider.SAFEBRAIN:
@@ -86,6 +88,8 @@ export function createLLM(config: LLMConfig): ChatOpenAI {
           },
         },
         maxTokens,
+        maxRetries: 3,
+        timeout: 60000,
       });
 
     default:
