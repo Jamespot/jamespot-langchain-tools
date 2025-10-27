@@ -17,6 +17,15 @@ import * as readline from 'readline';
 // Check for debug mode
 const DEBUG = process.argv.includes('--debug') || process.env.DEBUG === 'true';
 
+// Check for print mode (-p or --print)
+const printModeIndexShort = process.argv.indexOf('-p');
+const printModeIndexLong = process.argv.indexOf('--print');
+const printModeIndex = printModeIndexShort !== -1 ? printModeIndexShort : printModeIndexLong;
+const PRINT_MODE = printModeIndex !== -1;
+const PRINT_QUERY = PRINT_MODE && printModeIndex + 1 < process.argv.length
+    ? process.argv.slice(printModeIndex + 1).join(' ')
+    : null;
+
 async function main() {
     // Configuration
     const BACKEND_URL = process.env.JAMESPOT_URL;
@@ -73,6 +82,66 @@ async function main() {
         });
 
         console.log('✓ Agent ready!\n');
+
+        // Handle print mode (-p or --print)
+        if (PRINT_MODE) {
+            if (!PRINT_QUERY) {
+                console.error('Error: -p/--print requires a query argument');
+                console.error('Usage: npm run chat -- -p "your question here"');
+                console.error('   or: npm run chat -- --print "your question here"');
+                process.exit(1);
+            }
+
+            console.log('📤 Query:', PRINT_QUERY);
+            console.log('');
+
+            try {
+                let systemPrompt = process.env.SYSTEM_PROMPT;
+                const conversationHistory: Array<{ role: string; content: string }> = [];
+
+                if (systemPrompt) {
+                    conversationHistory.push({
+                        role: 'system',
+                        content: systemPrompt
+                    });
+                }
+
+                conversationHistory.push({
+                    role: 'user',
+                    content: PRINT_QUERY
+                });
+
+                const result = await agent.invoke(
+                    { messages: conversationHistory },
+                    { recursionLimit: 15 }
+                );
+
+                const messages = result.messages || [];
+                const lastMessage = messages[messages.length - 1];
+
+                let agentResponse = '';
+                if (lastMessage) {
+                    if (typeof lastMessage.content === 'string') {
+                        agentResponse = lastMessage.content;
+                    } else if (lastMessage.content && typeof lastMessage.content === 'object') {
+                        agentResponse = JSON.stringify(lastMessage.content, null, 2);
+                    }
+                }
+
+                if (agentResponse) {
+                    console.log(agentResponse);
+                } else {
+                    console.log('(No response)');
+                }
+
+                process.exit(0);
+            } catch (error) {
+                console.error('Error:', error instanceof Error ? error.message : String(error));
+                process.exit(1);
+            }
+        }
+
+        // Interactive mode
         console.log('='.repeat(60));
         console.log('You can now chat with the Jamespot AI Agent');
         console.log('Type "exit" or "quit" to end the conversation');
