@@ -16,9 +16,10 @@ export class GetCurrentDateTimeTool extends BaseJamespotTool {
         timezone: z.string().optional().describe('Timezone to use (e.g., "Europe/Paris", "America/New_York"). Defaults to server timezone.'),
       }),
       func: async function({ timezone }: any) {
-        try {
-          self.logToolUsage('jamespot_get_current_datetime', { timezone });
+        const toolName = 'jamespot_get_current_datetime';
+        self.logToolInput(toolName, { timezone });
 
+        try {
           const now = new Date();
 
           // Apply timezone if provided
@@ -79,10 +80,14 @@ export class GetCurrentDateTimeTool extends BaseJamespotTool {
             },
           };
 
-          self.logApiResponse('jamespot_get_current_datetime', response);
-          return JSON.stringify(response, null, 2);
+          self.logApiResponse('get_current_datetime_calculation', response);
+          const output = JSON.stringify(response, null, 2);
+          self.logToolOutput(toolName, output);
+          return output;
         } catch (error: any) {
-          return `Error: ${self.formatError(error)}`;
+          const errorMsg = `Error: ${self.formatError(error)}`;
+          self.logToolOutput(toolName, errorMsg);
+          return errorMsg;
         }
       },
     } as any);
@@ -106,9 +111,10 @@ export class CalculateDateTool extends BaseJamespotTool {
         timezone: z.string().optional().describe('Timezone to use (e.g., "Europe/Paris"). Defaults to server timezone.'),
       }),
       func: async function({ baseDate, days = 0, hours = 0, minutes = 0, timezone }: any) {
-        try {
-          self.logToolUsage('jamespot_calculate_date', { baseDate, days, hours, minutes, timezone });
+        const toolName = 'jamespot_calculate_date';
+        self.logToolInput(toolName, { baseDate, days, hours, minutes, timezone });
 
+        try {
           // Parse base date or use current date
           let date: Date;
           if (baseDate) {
@@ -164,10 +170,14 @@ export class CalculateDateTool extends BaseJamespotTool {
             },
           };
 
-          self.logApiResponse('jamespot_calculate_date', response);
-          return JSON.stringify(response, null, 2);
+          self.logApiResponse('calculate_date_computation', response);
+          const output = JSON.stringify(response, null, 2);
+          self.logToolOutput(toolName, output);
+          return output;
         } catch (error: any) {
-          return `Error: ${self.formatError(error)}`;
+          const errorMsg = `Error: ${self.formatError(error)}`;
+          self.logToolOutput(toolName, errorMsg);
+          return errorMsg;
         }
       },
     } as any);
@@ -184,9 +194,10 @@ export class GetConnectionContextTool extends BaseJamespotTool {
         'This is mandatory for constructing all full URLs because we always want absolute URLs in user answers.',
       schema: z.object({}),
       func: async function() {
-        try {
-          self.logToolUsage('jamespot_get_connection_context');
+        const toolName = 'jamespot_get_connection_context';
+        self.logToolInput(toolName, {});
 
+        try {
           const response = {
             connection: {
               backendUrl: self.backendUrl,
@@ -207,10 +218,14 @@ export class GetConnectionContextTool extends BaseJamespotTool {
             },
           };
 
-          self.logApiResponse('jamespot_get_connection_context', response);
-          return JSON.stringify(response, null, 2);
+          self.logApiResponse('connection_context_data', response);
+          const output = JSON.stringify(response, null, 2);
+          self.logToolOutput(toolName, output);
+          return output;
         } catch (error: any) {
-          return `Error: ${self.formatError(error)}`;
+          const errorMsg = `Error: ${self.formatError(error)}`;
+          self.logToolOutput(toolName, errorMsg);
+          return errorMsg;
         }
       },
     } as any);

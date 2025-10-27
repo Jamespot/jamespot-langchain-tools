@@ -145,20 +145,21 @@ async function main() {
                     });
 
                     if (debugEnabled) {
-                        console.log('\n📝 User input added to history');
-                        console.log('Current conversation length:', conversationHistory.length);
+                        const timestamp = new Date().toISOString();
+                        console.log(`\n${'='.repeat(80)}`);
+                        console.log(`💬 [${timestamp}] NEW REQUEST FROM USER`);
+                        console.log(`${'='.repeat(80)}`);
+                        console.log('\n📥 USER INPUT:');
+                        console.log(input);
+                        console.log('\n📊 Conversation history length:', conversationHistory.length);
+                        console.log(`${'='.repeat(80)}\n`);
                     }
 
                     // Show thinking indicator
                     console.log('\n🤔 Thinking...\n');
 
                     // Invoke agent with conversation history
-                    if (debugEnabled) {
-                        console.log('🔄 Invoking agent...');
-                        console.log('Messages being sent:', JSON.stringify(conversationHistory, null, 2));
-                        console.log('');
-                    }
-
+                    const startTime = Date.now();
                     const result = await agent.invoke(
                         {
                             messages: conversationHistory
@@ -167,29 +168,35 @@ async function main() {
                             recursionLimit: 15  // Limite à 15 appels LLM max par question
                         }
                     );
-
-                    if (debugEnabled) {
-                        console.log('\n📥 Raw agent result:');
-                        console.log(JSON.stringify(result, null, 2));
-                        console.log('');
-                    }
+                    const executionTime = Date.now() - startTime;
 
                     // Extract the last message from the agent
                     const messages = result.messages || [];
 
                     if (debugEnabled) {
-                        console.log('📨 All messages in result:');
+                        console.log(`\n${'='.repeat(80)}`);
+                        console.log(`🤖 AGENT RESPONSE (completed in ${executionTime}ms)`);
+                        console.log(`${'='.repeat(80)}`);
+                        console.log(`\n📊 Total messages in result: ${messages.length}`);
+
+                        console.log('\n📨 All messages:');
                         messages.forEach((msg: any, idx: number) => {
-                            console.log(`\nMessage ${idx + 1}:`, {
-                                type: msg.constructor.name,
-                                role: msg._getType ? msg._getType() : 'unknown',
-                                content: typeof msg.content === 'string' ?
-                                    msg.content.substring(0, 100) + (msg.content.length > 100 ? '...' : '') :
-                                    msg.content,
-                                toolCalls: msg.tool_calls || msg.additional_kwargs?.tool_calls,
-                            });
+                            const msgType = msg.constructor.name;
+                            const role = msg._getType ? msg._getType() : 'unknown';
+
+                            console.log(`\n  [${idx + 1}] ${msgType} (${role})`);
+
+                            if (msg.tool_calls && msg.tool_calls.length > 0) {
+                                console.log(`      🔧 Tool calls:`, msg.tool_calls.map((tc: any) => tc.name));
+                            }
+
+                            if (msg.content) {
+                                const contentPreview = typeof msg.content === 'string' ?
+                                    msg.content.substring(0, 150) + (msg.content.length > 150 ? '...' : '') :
+                                    JSON.stringify(msg.content).substring(0, 150);
+                                console.log(`      Content: ${contentPreview}`);
+                            }
                         });
-                        console.log('');
                     }
 
                     const lastMessage = messages[messages.length - 1];
@@ -211,13 +218,20 @@ async function main() {
                         });
 
                         if (debugEnabled) {
-                            console.log('📤 Agent response added to history');
-                            console.log('Response length:', agentResponse.length, 'characters\n');
+                            console.log('\n📤 FINAL RESPONSE TO USER:');
+                            const truncated = agentResponse.length > 500 ?
+                                agentResponse.substring(0, 500) + '\n... (truncated)' :
+                                agentResponse;
+                            console.log(truncated);
+                            console.log(`\n${'='.repeat(80)}\n`);
                         }
 
                         console.log('Agent:', agentResponse);
                     } else {
                         console.log('Agent: (No response)');
+                        if (debugEnabled) {
+                            console.log(`\n${'='.repeat(80)}\n`);
+                        }
                     }
 
                 } catch (error) {

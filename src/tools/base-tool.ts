@@ -53,24 +53,73 @@ export abstract class BaseJamespotTool {
   }
 
   /**
-   * Log tool usage
+   * Log tool input (what the tool receives)
    */
-  protected logToolUsage(toolName: string, params?: any): void {
+  protected logToolInput(toolName: string, params: any): void {
+    if (!this.debug) return;
+
     const timestamp = new Date().toISOString();
-    console.log(`\n🔧 [${timestamp}] Tool used: ${toolName}`);
+    console.log(`\n${'='.repeat(80)}`);
+    console.log(`🔧 [${timestamp}] TOOL CALLED: ${toolName}`);
+    console.log(`${'='.repeat(80)}`);
+    console.log('\n📥 INPUT (received from LLM):');
+    console.log(JSON.stringify(params, null, 2));
+  }
+
+  /**
+   * Log tool output (what the tool returns to LLM)
+   */
+  protected logToolOutput(toolName: string, result: string): void {
+    if (!this.debug) return;
+
+    console.log('\n📤 OUTPUT (returned to LLM):');
+    const truncated = result.length > 500 ? result.substring(0, 500) + '\n... (truncated)' : result;
+    console.log(truncated);
+    console.log(`\n${'='.repeat(80)}\n`);
+  }
+
+  /**
+   * Log API call before execution
+   */
+  protected logApiCall(apiMethod: string, params?: any): void {
+    if (!this.debug) return;
+
+    console.log(`\n🌐 API CALL: ${apiMethod}`);
     if (params && Object.keys(params).length > 0) {
-      console.log(`   Parameters: ${JSON.stringify(params)}`);
+      console.log('Parameters:', JSON.stringify(params, null, 2));
     }
   }
 
   /**
-   * Log API response in debug mode
+   * Log API response
    */
-  protected logApiResponse(toolName: string, result: any): void {
-    if (this.debug) {
-      console.log(`\n🔍 [${toolName}] API Response:`);
-      console.log(JSON.stringify(result, null, 2));
-      console.log('');
+  protected logApiResponse(apiMethod: string, result: any, executionTime?: number): void {
+    if (!this.debug) return;
+
+    console.log(`\n📨 API RESPONSE from ${apiMethod}:`);
+    if (executionTime !== undefined) {
+      console.log(`⏱️  Execution time: ${executionTime}ms`);
     }
+
+    // Log success/error status
+    if (result && typeof result === 'object' && 'error' in result) {
+      const status = result.error === 0 ? '✅ SUCCESS' : '❌ ERROR';
+      console.log(`Status: ${status}`);
+      if (result.error !== 0 && result.errorMsg) {
+        console.log(`Error: ${result.errorMsg}`);
+      }
+    }
+
+    console.log('Full response:', JSON.stringify(result, null, 2));
+  }
+
+  /**
+   * Measure execution time of an async function
+   */
+  protected async measureTime<T>(fn: () => Promise<T>): Promise<{ result: T; time: number }> {
+    const start = Date.now();
+    const result = await fn();
+    const time = Date.now() - start;
+    return { result, time };
   }
 }

@@ -16,15 +16,24 @@ export class GetCurrentUserTool extends BaseJamespotTool {
         'Get information about the currently authenticated user in Jamespot. Returns user profile including name, email, avatar, and other details.',
       schema: z.object({}),
       func: async function() {
+        const toolName = 'jamespot_get_current_user';
+        self.logToolInput(toolName, {});
+
         try {
           // The API stores the current user info after signIn
           if (self.currentUser) {
-            self.logApiResponse('jamespot_get_current_user', self.currentUser);
-            return JSON.stringify(self.currentUser, null, 2);
+            self.logApiResponse('cached_user_data', self.currentUser);
+            const output = JSON.stringify(self.currentUser, null, 2);
+            self.logToolOutput(toolName, output);
+            return output;
           }
-          return `Error: No authenticated user found. Please ensure credentials are provided.`;
+          const error = `Error: No authenticated user found. Please ensure credentials are provided.`;
+          self.logToolOutput(toolName, error);
+          return error;
         } catch (error: any) {
-          return `Error: ${self.formatError(error)}`;
+          const errorMsg = `Error: ${self.formatError(error)}`;
+          self.logToolOutput(toolName, errorMsg);
+          return errorMsg;
         }
       },
     } as any);
@@ -45,16 +54,28 @@ export class GetUserTool extends BaseJamespotTool {
         userId: z.string().describe('User ID or URI (e.g., "user/123" or "123")'),
       }),
       func: async function({ userId }: any) {
+        const toolName = 'jamespot_get_user';
+        self.logToolInput(toolName, { userId });
+
         try {
           const formattedId = userId.startsWith('user/') ? userId : `user/${userId}`;
-          const result = await self.api.user.get(formattedId);
+
+          self.logApiCall('api.user.get', { formattedId });
+          const { result, time } = await self.measureTime(() => self.api.user.get(formattedId));
+          self.logApiResponse('api.user.get', result, time);
+
           if (result.error === 0) {
-            self.logApiResponse('jamespot_get_user', result);
-            return JSON.stringify(result.result, null, 2);
+            const output = JSON.stringify(result.result, null, 2);
+            self.logToolOutput(toolName, output);
+            return output;
           }
-          return `Error: ${result.errorMsg || 'Failed to get user'}`;
+          const error = `Error: ${result.errorMsg || 'Failed to get user'}`;
+          self.logToolOutput(toolName, error);
+          return error;
         } catch (error: any) {
-          return `Error: ${self.formatError(error)}`;
+          const errorMsg = `Error: ${self.formatError(error)}`;
+          self.logToolOutput(toolName, errorMsg);
+          return errorMsg;
         }
       },
     } as any);
@@ -76,13 +97,21 @@ export class SearchUsersTool extends BaseJamespotTool {
         limit: z.number().optional().describe('Maximum number of results (default: 10)'),
       }),
       func: async function({ query, limit = 10 }: any) {
+        const toolName = 'jamespot_search_users';
+        self.logToolInput(toolName, { query, limit });
+
         try {
-          // Use autocomplete API for user search
-          const result = await self.api.user.autocomplete(query, limit);
-          self.logApiResponse('jamespot_search_users', result);
-          return JSON.stringify(result, null, 2);
+          self.logApiCall('api.user.autocomplete', { query, limit });
+          const { result, time } = await self.measureTime(() => self.api.user.autocomplete(query, limit));
+          self.logApiResponse('api.user.autocomplete', result, time);
+
+          const output = JSON.stringify(result, null, 2);
+          self.logToolOutput(toolName, output);
+          return output;
         } catch (error: any) {
-          return `Error: ${self.formatError(error)}`;
+          const errorMsg = `Error: ${self.formatError(error)}`;
+          self.logToolOutput(toolName, errorMsg);
+          return errorMsg;
         }
       },
     } as any);
@@ -106,16 +135,26 @@ export class UpdateUserProfileTool extends BaseJamespotTool {
         phone: z.string().optional().describe('User phone number'),
       }),
       func: async function(input: any) {
+        const toolName = 'jamespot_update_user_profile';
+        self.logToolInput(toolName, input);
+
         try {
-          // Use userUpdateProfile API
-          const result = await self.api.user.userUpdateProfile(input);
+          self.logApiCall('api.user.userUpdateProfile', input);
+          const { result, time } = await self.measureTime(() => self.api.user.userUpdateProfile(input));
+          self.logApiResponse('api.user.userUpdateProfile', result, time);
+
           if (result.error === 0) {
-            self.logApiResponse('jamespot_update_user_profile', result);
-            return `Successfully updated user profile`;
+            const output = `Successfully updated user profile`;
+            self.logToolOutput(toolName, output);
+            return output;
           }
-          return `Error: ${result.errorMsg || 'Failed to update profile'}`;
+          const error = `Error: ${result.errorMsg || 'Failed to update profile'}`;
+          self.logToolOutput(toolName, error);
+          return error;
         } catch (error: any) {
-          return `Error: ${self.formatError(error)}`;
+          const errorMsg = `Error: ${self.formatError(error)}`;
+          self.logToolOutput(toolName, errorMsg);
+          return errorMsg;
         }
       },
     } as any);
