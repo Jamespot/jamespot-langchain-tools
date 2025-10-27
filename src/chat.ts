@@ -69,7 +69,9 @@ async function main() {
         console.log('Creating agent...');
         const agent = createReactAgent({
             llm,
-            tools
+            tools,
+            messageModifier: `You are a helpful assistant for the Jamespot platform.
+Be concise and efficient. If you can't complete a task after 3 attempts, explain why and ask for clarification.`
         });
 
         console.log('✓ Agent ready!\n');
@@ -159,9 +161,14 @@ async function main() {
                         console.log('');
                     }
 
-                    const result = await agent.invoke({
-                        messages: conversationHistory
-                    });
+                    const result = await agent.invoke(
+                        {
+                            messages: conversationHistory
+                        },
+                        {
+                            recursionLimit: 15  // Limite à 15 appels LLM max par question
+                        }
+                    );
 
                     if (debugEnabled) {
                         console.log('\n📥 Raw agent result:');
