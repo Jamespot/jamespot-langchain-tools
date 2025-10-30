@@ -103,8 +103,8 @@ export class SearchArticlesTool extends BaseJamespotTool {
         'Search for articles/posts in Jamespot by keywords.',
       schema: z.object({
         query: z.string().optional().describe('Fulltext search query for article title or content.'),
-        groupFilter:z.number().optional().describe('May be provided to narrow search to articles published in this group. Value must be a spot ID'),
-        authorFilter:z.number().optional().describe('May be provided to narrow search to articles published by this author. Value must be a user ID'),
+        groupFilter:z.number().optional().describe('Optional, but must be provided to narrow search to articles published in this group. Value must be a spot ID'),
+        authorFilter:z.number().optional().describe('Optional, but must be provided to narrow search to articles published by this author. Value must be a user ID'),
         limit: z.number().optional().describe('Maximum number of results (default: 20)'),
       }),
       func: async function({ query, groupFilter, authorFilter, limit = 20 }: any) {
@@ -114,25 +114,29 @@ export class SearchArticlesTool extends BaseJamespotTool {
             limit,
           } as any;
 
-          if (query) {
-            searchQuery.query =  query;
+          if (query && query != '*') {
+            searchQuery.keywords =  query;
           }
+          searchQuery.filters = [];
+          searchQuery.filters.push({
+              field: 'mainType',
+              value: 'article'
+            });
 
           if (groupFilter) {
-            searchQuery['_sec'] = 's' + groupFilter
+            searchQuery.filters.push({
+              field: '__sec__',
+              value: 's' + groupFilter
+            });
           }
           if (authorFilter) {
-            if( !searchQuery.filters ) {
-              searchQuery.filters = {} as any;
-            }
-            searchQuery.filters.author = {
+            searchQuery.filters.push({
               field: 'idUser',
-              value: authorFilter,
-              exclude: false
-            };
+              value: authorFilter
+            });
           }
 
-          const result = await self.api.article.search(searchQuery);
+          const result = await self.api.search.searchQuery(searchQuery);
           if (result.error === 0) {
             self.logApiResponse('jamespot_search_articles', result);
             return JSON.stringify(result.result, null, 2);
