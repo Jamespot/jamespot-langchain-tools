@@ -77,7 +77,13 @@ export function createLLM(config: LLMConfig): ChatOpenAI | ChatMistralAI {
       }
 
       // Construct the OpenAI-compatible endpoint URL
-      const safebrainBaseURL = baseURL || `https://${safebrainInstance}/api/v2/bots/${safebrainBotId}/groups/${safebrainGroupId}`;
+      // Ensure the instance URL has https:// protocol if no protocol is specified
+      // (allows http://localhost for dev purposes)
+      let normalizedInstance = safebrainInstance;
+      if (!safebrainInstance.match(/^https?:\/\//)) {
+        normalizedInstance = `https://${safebrainInstance}`;
+      }
+      const safebrainBaseURL = baseURL || `${normalizedInstance}/api/v2/bots/${safebrainBotId}/groups/${safebrainGroupId}`;
       console.log("Using : " + safebrainBaseURL);
       return new ChatOpenAI({
         modelName: safebrainModel,
