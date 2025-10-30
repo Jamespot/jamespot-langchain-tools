@@ -167,7 +167,7 @@ async function main() {
                             messages: conversationHistory
                         },
                         {
-                            recursionLimit: 15,
+                            recursionLimit: 30,
                             streamMode: 'values'
                         }
                     );
