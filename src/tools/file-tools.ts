@@ -45,7 +45,7 @@ export class UploadFileTool extends BaseJamespotTool {
         'Returns upload result with file information. Requires a token which can be obtained from the network API.',
       schema: z.object({
         url: z.string().describe('URL of the file to upload (must be publicly accessible)'),
-        attrName: z.string().describe('Attribute name for the file (e.g., "file", "image", "document")'),
+        attrName: z.string().describe('Attribute name for the file (e.g., "image", "document")'),
         token: z.string().describe('Upload token obtained from the network API. The token value must be obtained from the network tool, and kept to be use after, during the article creation.'),
       }),
       func: async function({ url, attrName, token }: any) {

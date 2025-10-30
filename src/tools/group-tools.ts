@@ -62,7 +62,7 @@ export class GetGroupMembersTool extends BaseJamespotTool {
     return new DynamicStructuredTool({
       name: 'jamespot_get_group_members',
       description:
-        'Get the list of members of a specific group/community in Jamespot.',
+        'Get the list of members of a specific group/community in Jamespot. Level attribute returned by API corresponds to the following roles : 1 (administrator), 2 (author, contributor), 3 (member), 4 (viewer only), 5 (not member).',
       schema: z.object({
         groupId: z.string().describe('Group ID (numeric)'),
         limit: z.number().optional().describe('Maximum number of members to return (default: 100)'),
@@ -255,10 +255,10 @@ export class AddMemberTool extends BaseJamespotTool {
     return new DynamicStructuredTool({
       name: 'jamespot_add_member',
       description:
-        'Add a member to a group or change an existing member\'s role. Role levels: 0 (member), 1 (moderator), 2 (admin), 3 (owner).',
+        'Add a member to a group or change an existing member\'s role. Role levels: 1 (administrator), 2 (author, contributor), 3 (member), 4 (viewer only), 5 (not member).',
       schema: z.object({
         idUser: z.number().describe('User ID to add or modify'),
-        role: z.number().describe('Role level: 0 (member), 1 (moderator), 2 (admin), 3 (owner)'),
+        role: z.number().describe('Role level: 1 (administrator), 2 (author, contributor), 3 (member), 4 (viewer only), 5 (not member)'),
         idSpot: z.number().describe('Group/Spot ID'),
       }),
       func: async function({ idUser, role, idSpot }: any) {

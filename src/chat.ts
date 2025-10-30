@@ -152,55 +152,94 @@ async function main() {
                     // Show thinking indicator
                     console.log('\n🤔 Thinking...\n');
 
-                    // Invoke agent with conversation history
+                    // Stream agent response with conversation history
                     if (debugEnabled) {
-                        console.log('🔄 Invoking agent...');
+                        console.log('🔄 Streaming agent response...');
                         console.log('Messages being sent:', JSON.stringify(conversationHistory, null, 2));
                         console.log('');
                     }
 
-                    const result = await agent.invoke(
+                    let agentResponse = '';
+                    let agentStarted = false;
+
+                    const stream = await agent.stream(
                         {
                             messages: conversationHistory
                         },
                         {
-                            recursionLimit: 15  // Limite à 15 appels LLM max par question
+                            recursionLimit: 30,
+                            streamMode: 'values'
                         }
                     );
 
-                    if (debugEnabled) {
-                        console.log('\n📥 Raw agent result:');
-                        console.log(JSON.stringify(result, null, 2));
-                        console.log('');
-                    }
-
-                    // Extract the last message from the agent
-                    const messages = result.messages || [];
-
-                    if (debugEnabled) {
-                        console.log('📨 All messages in result:');
-                        messages.forEach((msg: any, idx: number) => {
-                            console.log(`\nMessage ${idx + 1}:`, {
-                                type: msg.constructor.name,
-                                role: msg._getType ? msg._getType() : 'unknown',
-                                content: typeof msg.content === 'string' ?
-                                    msg.content.substring(0, 100) + (msg.content.length > 100 ? '...' : '') :
-                                    msg.content,
-                                toolCalls: msg.tool_calls || msg.additional_kwargs?.tool_calls,
-                            });
-                        });
-                        console.log('');
-                    }
-
-                    const lastMessage = messages[messages.length - 1];
-
-                    let agentResponse = '';
-                    if (lastMessage) {
-                        if (typeof lastMessage.content === 'string') {
-                            agentResponse = lastMessage.content;
-                        } else if (lastMessage.content && typeof lastMessage.content === 'object') {
-                            agentResponse = JSON.stringify(lastMessage.content, null, 2);
+                    for await (const chunk of stream) {
+                        if (debugEnabled) {
+                            console.log('\n📦 Stream chunk:', JSON.stringify(chunk, null, 2));
                         }
+
+                        // Extract messages from the chunk
+                        const messages = chunk.messages;
+
+                        if (messages && Array.isArray(messages) && messages.length > 0) {
+                            const lastMessage = messages[messages.length - 1];
+                            const messageType = lastMessage._getType ? lastMessage._getType() : null;
+
+                            // Show tool calls
+                            if (messageType === 'ai' && lastMessage.tool_calls && lastMessage.tool_calls.length > 0) {
+                                for (const toolCall of lastMessage.tool_calls) {
+                                    console.log(`🔧 Calling tool: ${toolCall.name}`);
+                                    if (debugEnabled && toolCall.args) {
+                                        console.log(`   Args: ${JSON.stringify(toolCall.args)}`);
+                                    }
+                                }
+                            }
+
+                            // Show tool results
+                            if (messageType === 'tool') {
+                                const toolName = lastMessage.name || 'unknown';
+                                console.log(`✓ Tool completed: ${toolName}`);
+                                if (debugEnabled && lastMessage.content) {
+                                    const content = typeof lastMessage.content === 'string' ?
+                                        lastMessage.content :
+                                        JSON.stringify(lastMessage.content);
+                                    const preview = content.length > 100 ?
+                                        content.substring(0, 100) + '...' :
+                                        content;
+                                    console.log(`   Result: ${preview}`);
+                                }
+                            }
+
+                            // Show AI response
+                            if (messageType === 'ai' && (!lastMessage.tool_calls || lastMessage.tool_calls.length === 0)) {
+                                const content = typeof lastMessage.content === 'string' ?
+                                    lastMessage.content :
+                                    JSON.stringify(lastMessage.content);
+
+                                // Only update if content has changed and is not empty
+                                if (content && content !== agentResponse && content.trim() !== '') {
+                                    if (!agentStarted) {
+                                        process.stdout.write('\nAgent: ');
+                                        agentStarted = true;
+                                    }
+
+                                    // Write only the new part
+                                    if (content.startsWith(agentResponse)) {
+                                        const newPart = content.substring(agentResponse.length);
+                                        process.stdout.write(newPart);
+                                    } else {
+                                        // Complete replacement (shouldn't happen often)
+                                        process.stdout.write('\n\nAgent: ' + content);
+                                    }
+
+                                    agentResponse = content;
+                                }
+                            }
+                        }
+                    }
+
+                    // Add newline after streaming is complete
+                    if (agentStarted) {
+                        console.log('');
                     }
 
                     // Add agent response to history
@@ -214,10 +253,8 @@ async function main() {
                             console.log('📤 Agent response added to history');
                             console.log('Response length:', agentResponse.length, 'characters\n');
                         }
-
-                        console.log('Agent:', agentResponse);
                     } else {
-                        console.log('Agent: (No response)');
+                        console.log('(No response)');
                     }
 
                 } catch (error) {

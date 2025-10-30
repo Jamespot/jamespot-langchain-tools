@@ -2,6 +2,7 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
 import { BaseJamespotTool, JamespotToolConfig } from './base-tool';
 import { jUserList, jUserView } from 'jamespot-user-api';
+import { integer } from 'zod/v4/core/regexes';
 
 export class CreateArticleTool extends BaseJamespotTool {
   createTool() {
@@ -73,8 +74,13 @@ export class GetArticleTool extends BaseJamespotTool {
       }),
       func: async function({ articleId }: any) {
         try {
-          const formattedId = articleId.startsWith('article/') ? articleId : `article/${articleId}`;
-          const result = await self.api.article.get(formattedId);
+          let payload = {};
+          if (Number.isInteger(articleId)) {
+              payload = {idArticle: articleId};
+          } else {
+              payload = {uri: articleId};
+          }
+          const result = await self.api.article.get(payload);
           if (result.error === 0) {
             self.logApiResponse('jamespot_get_article', result);
             return JSON.stringify(result.result, null, 2);
@@ -96,15 +102,41 @@ export class SearchArticlesTool extends BaseJamespotTool {
       description:
         'Search for articles/posts in Jamespot by keywords.',
       schema: z.object({
-        query: z.string().describe('Search query for article title or content'),
+        query: z.string().optional().describe('Fulltext search query for article title or content.'),
+        groupFilter:z.number().optional().describe('Optional, but must be provided to narrow search to articles published in this group. Value must be a spot ID'),
+        authorFilter:z.number().optional().describe('Optional, but must be provided to narrow search to articles published by this author. Value must be a user ID'),
         limit: z.number().optional().describe('Maximum number of results (default: 20)'),
       }),
-      func: async function({ query, groupId, limit = 20 }: any) {
+      func: async function({ query, groupFilter, authorFilter, limit = 20 }: any) {
         try {
-          const result = await self.api.article.search({
-            query: query,
+
+          let searchQuery = {
             limit,
-          });
+          } as any;
+
+          if (query && query != '*') {
+            searchQuery.keywords =  query;
+          }
+          searchQuery.filters = [];
+          searchQuery.filters.push({
+              field: 'mainType',
+              value: 'article'
+            });
+
+          if (groupFilter) {
+            searchQuery.filters.push({
+              field: '__sec__',
+              value: 's' + groupFilter
+            });
+          }
+          if (authorFilter) {
+            searchQuery.filters.push({
+              field: 'idUser',
+              value: authorFilter
+            });
+          }
+
+          const result = await self.api.search.searchQuery(searchQuery);
           if (result.error === 0) {
             self.logApiResponse('jamespot_search_articles', result);
             return JSON.stringify(result.result, null, 2);
