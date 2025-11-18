@@ -131,7 +131,6 @@ export class CreateGroupTool extends BaseJamespotTool {
         language: z.string().describe('Language code (e.g., "fr", "en")'),
         category: z.string().describe('Category identifier for the group'),
         idCommunity: z.string().optional().describe('Parent community ID if this is a subgroup (optional)'),
-        widgets: z.array(z.string()).optional().describe('Array of widget names to enable (optional)'),
       }),
       func: async function(params: any) {
         try {

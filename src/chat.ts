@@ -11,6 +11,7 @@ import { JamespotUserApi, Network } from 'jamespot-user-api';
 import { WindowNode } from './utils/WindowNode';
 import { createJamespotTools } from './tools/tools';
 import { createLLM, getLLMConfigFromEnv, displayLLMConfig } from './llm/llm-factory';
+import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import * as readline from 'readline';
 
 
@@ -23,7 +24,9 @@ const printModeIndexLong = process.argv.indexOf('--print');
 const printModeIndex = printModeIndexShort !== -1 ? printModeIndexShort : printModeIndexLong;
 const PRINT_MODE = printModeIndex !== -1;
 const PRINT_QUERY = PRINT_MODE && printModeIndex + 1 < process.argv.length
-    ? process.argv.slice(printModeIndex + 1).join(' ')
+    ? process.argv.slice(printModeIndex + 1)
+        .filter(arg => !arg.startsWith('--') && arg !== '-p' && arg !== '--print')
+        .join(' ')
     : null;
 
 async function main() {
@@ -97,19 +100,18 @@ async function main() {
 
             try {
                 let systemPrompt = process.env.SYSTEM_PROMPT;
-                const conversationHistory: Array<{ role: string; content: string }> = [];
+                const conversationHistory: Array<any> = [];
 
-                if (systemPrompt) {
-                    conversationHistory.push({
-                        role: 'system',
-                        content: systemPrompt
-                    });
+                if (systemPrompt && systemPrompt.trim()) {
+                    conversationHistory.push(new SystemMessage(systemPrompt));
                 }
 
-                conversationHistory.push({
-                    role: 'user',
-                    content: PRINT_QUERY
-                });
+                conversationHistory.push(new HumanMessage(PRINT_QUERY));
+
+                if (DEBUG) {
+                    console.log('📊 Conversation history before invoke:');
+                    console.log(JSON.stringify(conversationHistory, null, 2));
+                }
 
                 const result = await agent.invoke(
                     { messages: conversationHistory },
@@ -135,8 +137,14 @@ async function main() {
                 }
 
                 process.exit(0);
-            } catch (error) {
-                console.error('Error:', error instanceof Error ? error.message : String(error));
+            } catch (error: any) {
+                console.error('Error:', error.message || String(error));
+                if (DEBUG && error.stack) {
+                    console.error('Stack:', error.stack);
+                }
+                if (DEBUG && error.response) {
+                    console.error('Response:', error.response);
+                }
                 process.exit(1);
             }
         }
@@ -161,7 +169,7 @@ async function main() {
         const conversationHistory: Array<{ role: string; content: string }> = [];
 
         let systemPrompt = process.env.SYSTEM_PROMPT;
-        if (systemPrompt) {
+        if (systemPrompt && systemPrompt.trim()) {
             conversationHistory.push({
                             role: 'system',
                             content: systemPrompt

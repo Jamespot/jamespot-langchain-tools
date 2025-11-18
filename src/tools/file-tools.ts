@@ -78,7 +78,6 @@ export class DuplicateFileTool extends BaseJamespotTool {
       schema: z.object({
         idFile: z.number().describe('File ID to duplicate'),
         title: z.string().describe('Title for the new file/article'),
-        publishTo: z.array(z.string()).optional().describe('Array of URIs to publish to (e.g., ["spot/123", "user/456"])'),
       }),
       func: async function({ idFile, title, publishTo }: any) {
         try {
